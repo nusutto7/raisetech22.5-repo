@@ -18,4 +18,5 @@
 * 構成図は以下のとおり
 <img width= 30% src="https://user-images.githubusercontent.com/75251188/179355093-4ee008dd-a85d-4cd2-a4ae-9ccff5f91af9.jpg">
 
+* タイプミスなどでエラーが出たが、ひとまずスタックの作成に成功。
 <img width= 30% src="https://user-images.githubusercontent.com/75251188/179355269-bf8c3744-a2db-430f-bc98-57a854888f65.png">
