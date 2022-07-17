@@ -27,7 +27,10 @@
 >Note
 >
 >DB security groups are a part of the EC2-Classic Platform and as such are not supported in all regions. It is advised to use the AWS::EC2::SecurityGroup resource in those regions instead. 
-* とのことなので、RDS・ALBのセキュリティグループもすべてAWS::EC2::SecurityGroupで定義する。
+* …とのことなので、RDS・ALBのセキュリティグループもすべてAWS::EC2::SecurityGroupで定義する。
+* 構成図は以下のとおり
+
+!<img width=30% src="https://user-images.githubusercontent.com/75251188/179382123-165f48e5-14b0-4e97-b43b-86daee730a8e.png">
 
   * EC2
     * SSH接続を許可。port22
@@ -35,4 +38,9 @@
   * RDS
     * EC2からのトラフィックを許可(今回は面倒なので全IP許可)。port3306
   * ALB
-    * 全TCP/IPトラフィックを許可。port３０００
+    * 全TCP/IPトラフィックを許可。port3000
+
+* 成功
+<img width=30% src="https://user-images.githubusercontent.com/75251188/179382138-2a7469b9-69d7-46cc-950a-1d425913039d.png">
+
+
