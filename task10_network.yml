@@ -36,7 +36,7 @@ Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 10.0.0.0/16
+      CidrBlock: !Ref VPCCIDR
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
       Tags:
@@ -56,7 +56,7 @@ Resources:
       VpcId: !Ref VPC
 
   #--------------------------------------#
-  #Subnet(2つのAZに、Public Subnet, Private Subnetを1セットずつ配置)
+  #Subnet作成(2つのAZに、Public Subnet, Private Subnetをそれぞれ配置)
   #--------------------------------------#
   PublicSubnetA:
     Type: AWS::EC2::Subnet
@@ -120,7 +120,8 @@ Resources:
 
 
   #--------------------------------------#
-  #Routeの定義
+  #Routeの定義(Public Subnet用)
+  #DependsOnはおまけ
   #--------------------------------------#
   PublicRoute:
     Type: AWS::EC2::Route
@@ -167,4 +168,14 @@ Resources:
         - !Ref PrivateRouteTable
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
       VpcId: !Ref VPC
+
+  #--------------------------------------#
+  #Outputs for Cross Stack Reference
+  #--------------------------------------#
+Outputs:
+  VPC:
+    Description: VPC Id
+    Value: !Ref VPC
+    Export:
+      Name: VPCId
   
