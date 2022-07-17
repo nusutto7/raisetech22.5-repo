@@ -20,3 +20,19 @@
 
 * タイプミスなどでエラーが出たが、ひとまずスタックの作成に成功。
 <img width= 30% src="https://user-images.githubusercontent.com/75251188/179355269-bf8c3744-a2db-430f-bc98-57a854888f65.png">
+
+### 2. Security Layer
+* 以下のリソースにアタッチするセキュリティグループを、ここでまとめて作成する。設定する必要があるのはIngress(デフォルトだとすべて拒否されてしまうから)。Egressはデフォルトですべて許可なので放置。
+* AWS::RDS::DBSecurityGroupの公式ドキュメントを読むと、こんなことが書いてあった。
+>Note
+>
+>DB security groups are a part of the EC2-Classic Platform and as such are not supported in all regions. It is advised to use the AWS::EC2::SecurityGroup resource in those regions instead. 
+* とのことなので、RDS・ALBのセキュリティグループもすべてAWS::EC2::SecurityGroupで定義する。
+
+  * EC2
+    * SSH接続を許可。port22
+    * ALBからのトラフィックを許可。port80
+  * RDS
+    * EC2からのトラフィックを許可(今回は面倒なので全IP許可)。port3306
+  * ALB
+    * 全TCP/IPトラフィックを許可。port３０００
