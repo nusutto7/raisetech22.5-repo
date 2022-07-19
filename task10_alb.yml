@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ALB Template
+
+Parameters:
+  AlbListnerPort:
+    Type: Number
+    Default: 3000
+    MinValue: 1
+    MaxValue: 65535
+
+Resources:
+#--------------------------------------#
+#Create ALB
+#--------------------------------------#
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: ipv4
+      Name: alb-for-raisetech-task
+      Scheme: internet-facing
+      SecurityGroups: 
+        - !ImportValue ALB-SecurityGroup
+      Subnets: 
+        - !ImportValue PublicSubnetA
+        - !ImportValue PublicSubnetC
+      Type: application
+      Tags: 
+        - Key: Name
+          Value: ALB
+  
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      HealthCheckEnabled: True
+      HealthCheckIntervalSeconds: 120
+      HealthCheckPath: /
+      HealthCheckPort: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 2
+      IpAddressType: ipv4
+      Matcher: 
+        HttpCode: 200
+      Name: albforraisetecktask
+      Port: 80
+      Protocol: HTTP
+      ProtocolVersion: HTTP1
+      Targets: 
+        - Id: !ImportValue EC2InstanceA
+          Port: 80
+        - Id: !ImportValue EC2InstanceC
+          Port: 80
+      TargetType: instance
+      UnhealthyThresholdCount: 2
+      VpcId: !ImportValue VPCId
+      Tags: 
+        - Key: Name
+          Value: Specify the Target group
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions: 
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ALB
+      Port: !Ref AlbListnerPort
+      Protocol: HTTP

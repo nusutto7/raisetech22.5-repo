@@ -1,0 +1,251 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Application Layer Template
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Create a new KeyPair
+          Parameters:
+            - KeyPairName
+            - KeyPairType
+      - Label:
+          default: EC2 configration
+          Parameters:
+            - ImageId
+            - InstanceTypeParameter
+            - EC2InstanceVolumeType
+            - EC2InstanceVolumeSize
+      - Label:
+          default: RDS configration
+          Parameters:
+            - DBAllocatedStorage
+            - MaxAllocatedStorage
+            - DBInstanceClass
+            - DBEngine
+            - DBEngineVersion
+            - DBName
+            - DBUsername
+            - DBPassword
+      - Label:
+          default: S3Bucket configration
+          Parameters:
+            - S3BucketName
+
+
+Parameters:
+#--------------------------------------#
+#KeyPair Parameters
+#--------------------------------------#
+  KeyPairName:
+    Type: String
+    Default: myCFnKeyPair  
+  KeyPairType:
+    Type: String
+    Default: rsa
+#--------------------------------------#
+#EC2 Parameters
+#--------------------------------------#
+  EC2InstanceVolumeType:
+    Type: String
+    Default: gp2  
+  EC2InstanceVolumeSize:
+    Type: String
+    Default: 16
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+    Description: Enter t2.micro or t2.small.
+#--------------------------------------#
+#RDS Parameters
+#--------------------------------------#
+  DBName:
+    Default: tanazawadb
+    Description: My database 
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
+  DBInstanceClass:
+    Default: db.t3.micro
+    Description: DB instance class
+    Type: String
+    ConstraintDescription: Must select a valid DB instance type.
+  DBAllocatedStorage:
+    Default: 20
+    Description: The size of the database (GiB)
+    Type: Number
+    MinValue: 20
+    MaxValue: 65536
+    ConstraintDescription: must be between 20 and 65536 GiB.
+  MaxAllocatedStorage:
+    Type: Number
+    Default: 100
+    Description: Maximum size of the database (GiB)
+  DBEngine:
+    Type: String
+    Default: mysql
+  DBEngineVersion:
+    Type: String
+    Default: 8.0.28
+  DBUsername:
+    NoEcho: 'true'
+    Description: Username for MySQL database access
+    Type: String
+    Default: tanazawa
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password MySQL database access
+    Type: String
+    Default: tanazawa1112
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+#--------------------------------------#
+#RDS Parameters
+#--------------------------------------#
+  S3BucketName:
+    Type: String
+    Default: s3tanazawa202207
+
+Resources:
+#--------------------------------------#
+#Create KeyPair
+#--------------------------------------#
+  KeyPair:
+      Type: AWS::EC2::KeyPair
+      Properties: 
+        KeyName: !Ref KeyPairName
+        KeyType: !Ref KeyPairType
+        Tags: 
+          - Key: Name
+            Value: !Ref KeyPairName
+#--------------------------------------#
+#Create EC2 Instances
+#--------------------------------------#
+  EC2InstanceA:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: ap-northeast-1a
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            VolumeType: !Ref EC2InstanceVolumeType
+            VolumeSize: !Ref EC2InstanceVolumeSize
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref KeyPair
+      SecurityGroupIds: 
+        - !ImportValue EC2-SecurityGroup
+      SubnetId: !ImportValue PublicSubnetA
+      Tags: 
+        - Key: Name
+          Value: EC2instanceA
+
+  EC2InstanceC:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: ap-northeast-1c
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            VolumeType: !Ref EC2InstanceVolumeType
+            VolumeSize: !Ref EC2InstanceVolumeSize
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref KeyPair
+      SecurityGroupIds: 
+        - !ImportValue EC2-SecurityGroup
+      SubnetId: !ImportValue PublicSubnetC
+      Tags: 
+        - Key: Name
+          Value: EC2instanceC
+
+#--------------------------------------#
+#Create RDS:MultiAZ
+#--------------------------------------#
+  RDSinMultiAZ:
+    Type: AWS::RDS::DBInstance
+    Properties: 
+      AllocatedStorage: !Ref DBAllocatedStorage
+      AllowMajorVersionUpgrade: True
+      #AvailabilityZone: ap-northeast-1a
+      BackupRetentionPeriod: 0
+      DBInstanceClass: !Ref DBInstanceClass
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DBSubnetGroups
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      MaxAllocatedStorage: !Ref MaxAllocatedStorage
+      MultiAZ: True
+      Port: 3306
+      PubliclyAccessible: False
+      StorageEncrypted: False
+      StorageType: gp2
+      VPCSecurityGroups: 
+        - !ImportValue RDS-SecurityGroup
+      Tags: 
+        - Key: Name
+          Value: MultiAZ RDS
+    DeletionPolicy: Delete
+      
+  DBSubnetGroups:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: Subnets for MultiAZ RDS
+      DBSubnetGroupName: DBSubnetGroups
+      SubnetIds: 
+        - !ImportValue PrivateSubnetA
+        - !ImportValue PrivateSubnetC
+      Tags: 
+        - Key: Name
+          Value: RDS in PrivateSubnet1A and 1C
+
+
+
+#--------------------------------------#
+#Create S3Bucket
+#--------------------------------------#
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+
+Outputs:
+  EC2InstanceA:
+    Description: EC2InstanceA
+    Value: !Ref EC2InstanceA
+    Export:
+      Name: EC2InstanceA
+
+  EC2InstanceC:
+    Description: EC2InstanceC
+    Value: !Ref EC2InstanceC
+    Export:
+      Name: EC2InstanceC
+

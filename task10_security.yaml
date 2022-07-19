@@ -56,3 +56,25 @@ Resources:
       Tags:
       - Key: Name
         Value: ALB Security Group
+
+#--------------------------------------#
+#Outputs for Cross Stack Reference
+#--------------------------------------#
+Outputs:
+  SGforEC2:
+    Description: Security Group for EC2
+    Value: !Ref EC2SecurityGroup
+    Export:
+      Name: EC2-SecurityGroup
+
+  SGforRDS:
+    Description: Security Group for RDS
+    Value: !Ref RDSSecurityGroup
+    Export:
+      Name: RDS-SecurityGroup
+  
+  SGforALB:
+    Description: Security Group for ALB
+    Value: !Ref ALBSecurityGroup
+    Export:
+      Name: ALB-SecurityGroup
