@@ -57,5 +57,5 @@ Resources:
         - TargetGroupArn: !Ref TargetGroup
           Type: forward
       LoadBalancerArn: !Ref ALB
-      Port: 3000
+      Port: !Ref AlbListnerPort
       Protocol: HTTP
