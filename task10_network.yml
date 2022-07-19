@@ -179,3 +179,23 @@ Outputs:
     Export:
       Name: VPCId
   
+  PublicSubnetA:
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: PublicSubnetA
+  
+  PublicSubnetC:
+    Value: !Ref PublicSubnetC
+    Export:
+      Name: PublicSubnetC
+  
+  PrivateSubnetA:
+    Value: !Ref PrivateSubnetA
+    Export:
+      Name: PrivateSubnetA
+  
+  PrivateSubnetC:
+    Value: !Ref PrivateSubnetC
+    Export:
+      Name: PrivateSubnetC
+  
