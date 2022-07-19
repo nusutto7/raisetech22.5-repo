@@ -82,18 +82,23 @@ https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resourc
   * AWS::RDS::DBSubnetGroupで複数のAZを指定してあげればOK(のはず)。
 * その他プロパティは成り行きに任せる。適宜パラメータ化。
 
+* 成功(EC2 & RDS)
+<img width=30% alt="スクリーンショット 2022-07-18 18 29 57" src="https://user-images.githubusercontent.com/75251188/179838520-4860b72d-d554-4a24-921b-545abeaa9085.png">
 
 #### ALB
 知識が弱かったのが原因でとても苦戦した。
 タイプミスも多く、Applicationテンプレート内でRDSなどと一緒にしてしまうと、スタックの削除にものすごく時間がかかってしまうため、これだけテンプレートを独立させることにした。
 設定するべきは、ユーザーからのリクエストを受けるポート、ヘルスチェックを発信するポート、ヘルスチェックの宛先ポート、ヘルスチェックの応答を受けるポート。この4つ???
 一応スタックは作れたものの、理解がかなり曖昧なので復習します。
+* 成功
+<img width=30% alt="スクリーンショット 2022-07-19 8 11 24" src="https://user-images.githubusercontent.com/75251188/179838785-f102875d-d42c-49c4-b07d-5d6081ec3fdf.png">
 
 #### S3
 特になし。
 
 ### 4. エラー
 * `Encountered unsupported property 'hogehoge'`
+
   * 意味：hogehogeというプロパティは、当該リソースには存在しない
   * 対策：プロパティを再確認する。プロパティ名は大文字・小文字を厳格に区別するため、'id' 'port'などのタイプミスでハマった(正しくは'Id' 'Port')
 * `ValidationError`

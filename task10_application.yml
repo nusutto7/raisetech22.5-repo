@@ -115,7 +115,7 @@ Parameters:
     ConstraintDescription: must contain only alphanumeric characters.
 
 #--------------------------------------#
-#RDS Parameters
+#S3 Parameters
 #--------------------------------------#
   S3BucketName:
     Type: String
@@ -236,6 +236,9 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
+#--------------------------------------#
+#Outputs
+#--------------------------------------#
 Outputs:
   EC2InstanceA:
     Description: EC2InstanceA
