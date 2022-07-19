@@ -1,6 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: ALB Template
 
+Parameters:
+  AlbListnerPort:
+    Type: Number
+    Default: 3000
+    MinValue: 1
+    MaxValue: 65535
+
 Resources:
 #--------------------------------------#
 #Create ALB
