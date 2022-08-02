@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Network Layer Template
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Network Configuration"
+        Parameters:
+          - VPCCIDR
+          - PublicSubnetACIDR
+          - PublicSubnetCCIDR
+          - PrivateSubnetACIDR
+          - PrivateSubnetCCIDR
+
+Parameters:
+  VPCCIDR:
+    Type: String
+    Default: "10.0.0.0/16"
+  PublicSubnetACIDR:
+    Type: String
+    Default: "10.0.1.0/24"
+  PublicSubnetCCIDR:
+    Type: String
+    Default: "10.0.2.0/24"
+  PrivateSubnetACIDR:
+    Type: String
+    Default: "10.0.3.0/24"
+  PrivateSubnetCCIDR:
+    Type: String
+    Default: "10.0.4.0/24"
+
+Resources:
+  #--------------------------------------#
+  #VPCを構築→IGW構築→VPCにIGWをアタッチ
+  #--------------------------------------#
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+      - Key: Name
+        Value: VPC
+  IGW:  
+    Type: AWS::EC2::InternetGateway
+    Properties: 
+      Tags: 
+      - Key: Name
+        Value: IGW
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref VPC
+
+  #--------------------------------------#
+  #Subnet作成(2つのAZに、Public Subnet, Private Subnetをそれぞれ配置)
+  #--------------------------------------#
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: "ap-northeast-1a"
+      CidrBlock: !Ref PublicSubnetACIDR
+      VpcId: !Ref VPC
+      Tags: 
+      - Key: Name
+        Value: PublicSubnetA
+
+  
+  PublicSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: "ap-northeast-1c"
+      CidrBlock: !Ref PublicSubnetCCIDR
+      VpcId: !Ref VPC
+      Tags: 
+      - Key: Name
+        Value: PublicSubnetC
+
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: "ap-northeast-1a"
+      CidrBlock: !Ref PrivateSubnetACIDR
+      VpcId: !Ref VPC
+      Tags: 
+      - Key: Name
+        Value: PrivateSubnetA
+
+  PrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: "ap-northeast-1c"
+      CidrBlock: !Ref PrivateSubnetCCIDR
+      VpcId: !Ref VPC
+      Tags: 
+      - Key: Name
+        Value: PrivateSubnetC
+  
+  #--------------------------------------#
+  #Route Tableの作成
+  #--------------------------------------#
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: PublicRouteTable
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: PrivateRouteTable
+
+
+  #--------------------------------------#
+  #Routeの定義(Public Subnet用)
+  #DependsOnはおまけ
+  #--------------------------------------#
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+       RouteTableId: !Ref PublicRouteTable
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId: !Ref IGW
+
+  #--------------------------------------#
+  #SubnetとRouteTableの関連付け
+  #--------------------------------------#
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+  
+  PublicSubnetCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetC
+      RouteTableId: !Ref PublicRouteTable
+  
+  PrivateSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTable
+  
+  PrivateSubnetCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetC
+      RouteTableId: !Ref PrivateRouteTable
+
+  #--------------------------------------#
+  #S3にアクセスするためVPC Endpointを作成
+  #--------------------------------------#
+  S3GatewayEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      RouteTableIds: 
+        - !Ref PrivateRouteTable
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref VPC
+
+  #--------------------------------------#
+  #Outputs for Cross Stack Reference
+  #--------------------------------------#
+Outputs:
+  VPC:
+    Description: VPC Id
+    Value: !Ref VPC
+    Export:
+      Name: VPCId
+  
+  PublicSubnetA:
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: PublicSubnetA
+  
+  PublicSubnetC:
+    Value: !Ref PublicSubnetC
+    Export:
+      Name: PublicSubnetC
+  
+  PrivateSubnetA:
+    Value: !Ref PrivateSubnetA
+    Export:
+      Name: PrivateSubnetA
+  
+  PrivateSubnetC:
+    Value: !Ref PrivateSubnetC
+    Export:
+      Name: PrivateSubnetC
+  
